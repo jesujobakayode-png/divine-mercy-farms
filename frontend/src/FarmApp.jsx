@@ -160,19 +160,31 @@ export default function FarmApp() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [page, setPage] = useState("Dashboard");
+  const [mobileMenu, setMobileMenu] = useState(false);
   useEffect(() => { const token = localStorage.getItem("dmf_token"); if (token) request("/auth/me").then((data) => setUser(data.user)).catch(() => localStorage.removeItem("dmf_token")).finally(() => setChecking(false)); else setChecking(false); }, []);
   if (checking) return <main className="grid min-h-screen place-items-center bg-[#f7f8f2]"><p className="font-semibold text-[#28583b]">Loading Divine Mercy Farms…</p></main>;
   if (!user) return <Login onLogin={setUser} />;
   const logout = () => { localStorage.removeItem("dmf_token"); setUser(null); };
+  const pageIcons = { Dashboard: "⌂", Flocks: "🐔", "Egg Production": "🥚", Sales: "↗", Customers: "♙", Expenses: "₦" };
+  const navigate = (nextPage) => { setPage(nextPage); setMobileMenu(false); };
   return <div className="min-h-screen bg-[#f7f8f2] md:flex">
-    <aside className="bg-[#183d2b] text-white md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
-      <div className="flex items-center gap-3 border-b border-white/10 px-6 py-6"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d6edb5] text-2xl">🌱</div><div><h1 className="font-bold">Divine Mercy</h1><p className="text-xs text-green-200">FARMS MANAGEMENT</p></div></div>
-      <nav className="grid grid-cols-2 gap-1 p-4 sm:grid-cols-3 md:block md:space-y-1">{pages.map((name) => <button key={name} onClick={() => setPage(name)} className={`rounded-xl px-4 py-3 text-left text-sm ${page === name ? "bg-[#d6edb5] font-semibold text-[#183d2b]" : "text-green-50 hover:bg-white/10"}`}>{name}</button>)}</nav>
-      <button onClick={logout} className="mx-4 mt-2 rounded-xl border border-white/15 px-4 py-3 text-sm md:mt-auto md:mb-5">Sign out</button>
+    {mobileMenu && <button aria-label="Close navigation" onClick={() => setMobileMenu(false)} className="fixed inset-0 z-40 bg-[#102318]/50 backdrop-blur-sm lg:hidden" />}
+    <aside className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-[280px] max-w-[85vw] flex-col overflow-hidden bg-[#183d2b] text-white shadow-2xl transition-transform duration-300 lg:w-64 lg:translate-x-0 lg:shadow-none ${mobileMenu ? "translate-x-0" : "-translate-x-full"}`}>
+      <div className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-5 lg:px-6 lg:py-6"><div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#d6edb5] text-2xl">🌱</div><div className="min-w-0 flex-1"><h1 className="font-bold tracking-wide">Divine Mercy</h1><p className="text-[10px] font-semibold tracking-[0.16em] text-green-200">FARMS MANAGEMENT</p></div><button aria-label="Close menu" onClick={() => setMobileMenu(false)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xl lg:hidden">×</button></div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5">
+        <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-green-300/80">Farm workspace</p>
+        <nav className="flex flex-col space-y-1.5">{pages.map((name) => <button key={name} onClick={() => navigate(name)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-all duration-200 ${page === name ? "bg-[#d6edb5] font-semibold text-[#183d2b] shadow-sm" : "text-green-50 hover:bg-white/10 hover:text-white"}`}><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg ${page === name ? "bg-white/40" : "bg-white/5"}`}>{pageIcons[name]}</span><span>{name}</span>{page === name && <span className="ml-auto text-[#4f7738]">›</span>}</button>)}</nav>
+      </div>
+      <div className="shrink-0 border-t border-white/10 p-4"><div className="mb-3 flex items-center gap-3 rounded-xl px-1"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d6edb5] font-bold text-[#183d2b]">{user.name?.charAt(0).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-sm font-semibold">{user.name}</p><p className="text-xs text-green-200">Farm Administrator</p></div></div><button onClick={logout} className="w-full rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold transition hover:bg-white/10">Sign out</button></div>
     </aside>
-    <main className="min-w-0 flex-1 p-4 sm:p-6 md:ml-64 md:p-9">
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm text-[#738273]">Farm workspace / {page}</p><h2 className="mt-2 text-2xl font-bold text-[#183d2b] sm:text-3xl">{page === "Dashboard" ? `Good morning, ${user.name?.split(" ")[0]} 👋` : page}</h2></div><div className="rounded-2xl border border-[#e5e9dc] bg-white px-4 py-3 text-right"><p className="text-sm font-semibold">{user.name}</p><p className="text-xs text-[#738273]">Farm Admin</p></div></header>
-      {page === "Dashboard" ? <Dashboard setPage={setPage} /> : <Records page={page} />}
+    <main className="min-w-0 flex-1 lg:ml-64">
+      <header className="sticky top-0 z-30 mb-0 flex items-center justify-between gap-3 border-b border-[#e5e9dc] bg-[#f7f8f2]/95 px-4 py-3 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:px-9 lg:pb-6 lg:pt-9">
+        <button aria-label="Open navigation" onClick={() => setMobileMenu(true)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#dfe5d7] bg-white text-xl text-[#183d2b] shadow-sm lg:hidden">☰</button>
+        <div className="min-w-0 flex-1"><p className="hidden text-sm text-[#738273] sm:block">Farm workspace / {page}</p><h2 className="truncate text-xl font-bold text-[#183d2b] sm:mt-2 sm:text-2xl lg:text-3xl">{page === "Dashboard" ? `Good morning, ${user.name?.split(" ")[0]} 👋` : page}</h2></div><div className="hidden rounded-2xl border border-[#e5e9dc] bg-white px-4 py-3 text-right sm:block"><p className="text-sm font-semibold">{user.name}</p><p className="text-xs text-[#738273]">Farm Admin</p></div>
+      </header>
+      <div className="p-4 sm:p-6 lg:px-9 lg:pb-9">
+        {page === "Dashboard" ? <Dashboard setPage={navigate} /> : <Records page={page} />}
+      </div>
     </main>
   </div>;
 }
