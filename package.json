@@ -1,17 +1,12 @@
 {
-  "name": "divine-mercy-farms-api",
+  "name": "divine-mercy-farms",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend API for Divine Mercy Farms poultry management system",
-  "main": "server.js",
-  "scripts": { "dev": "nodemon server.js", "start": "node server.js", "check": "node --check server.js", "build": "npm run check && npm --prefix frontend run build", "start:frontend": "npm --prefix frontend run dev" },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.5"
-  },
-  "devDependencies": { "nodemon": "^3.1.7" }
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run check --prefix backend && npm run build --prefix frontend",
+    "start": "npm start --prefix backend"
+  }
 }

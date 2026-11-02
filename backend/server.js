@@ -33,7 +33,7 @@ app.use("/api/payments", makeRoutes(resources.payments));
 app.use("/api/expenses", require("./routes/expenseRoutes"));
 app.use("/api/dashboard", dashboardRoutes);
 
-const frontendDist = path.join(__dirname, "frontend", "dist");
+const frontendDist = path.join(__dirname, "..", "frontend", "dist");
 const fs = require("fs");
 
 if (fs.existsSync(frontendDist)) {
