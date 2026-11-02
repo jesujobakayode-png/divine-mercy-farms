@@ -4,7 +4,7 @@
   "private": true,
   "description": "Backend API for Divine Mercy Farms poultry management system",
   "main": "server.js",
-  "scripts": { "dev": "nodemon server.js", "start": "node server.js", "check": "node --check server.js" },
+  "scripts": { "dev": "nodemon server.js", "start": "node server.js", "check": "node --check server.js", "build": "npm run check && npm --prefix frontend run build", "start:frontend": "npm --prefix frontend run dev" },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

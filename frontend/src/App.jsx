@@ -292,3 +292,5 @@ function App() {
 }
 
 export default FarmApp;
+
+void App;

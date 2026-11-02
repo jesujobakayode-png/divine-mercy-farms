@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const connectDB = require("./config/db");
 const makeRoutes = require("./routes/resourceRoutes");
@@ -31,6 +32,17 @@ app.use("/api/sales", makeRoutes(resources.sales));
 app.use("/api/payments", makeRoutes(resources.payments));
 app.use("/api/expenses", require("./routes/expenseRoutes"));
 app.use("/api/dashboard", dashboardRoutes);
+
+const frontendDist = path.join(__dirname, "frontend", "dist");
+const fs = require("fs");
+
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) return next();
+    return res.sendFile(path.join(frontendDist, "index.html"));
+  });
+}
 
 app.use((_, res) =>
   res.status(404).json({

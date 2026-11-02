@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
 const pages = ["Dashboard", "Flocks", "Egg Production", "Sales", "Customers", "Expenses"];
 
 const money = (value) => `₦${Number(value || 0).toLocaleString()}`;
@@ -27,6 +27,7 @@ function Login({ onLogin }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", businessName: "Divine Mercy Farms" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -59,7 +60,10 @@ function Login({ onLogin }) {
           <input className="field mb-3" placeholder="Farm name" required value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} />
         )}
         <input className="field mb-3" type="email" placeholder="Email address" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input className="field" type="password" placeholder="Password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+        <div className="relative mb-1">
+          <input className="field pr-14" type={showPassword ? "text" : "password"} placeholder="Password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-2 text-lg text-[#738273]">{showPassword ? "◉" : "○"}</button>
+        </div>
         {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
         <button disabled={loading} className="mt-5 w-full rounded-xl bg-[#28583b] px-4 py-3 font-semibold text-white hover:bg-[#183d2b] disabled:opacity-60">
           {loading ? "Please wait…" : register ? "Create account" : "Sign in"}
@@ -131,6 +135,8 @@ function Records({ page }) {
   const [error, setError] = useState("");
 
   const load = async () => { try { const data = await request(config.endpoint); setItems(data.items || []); } catch (err) { setError(err.message); } };
+  // Reload records when their page changes; API requests are intentionally handled outside render state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); if (config.relation || config.relations) request("/flocks?status=active").then((d) => setFlocks(d.items || [])); if (config.relations?.includes("customerId")) request("/customers").then((d) => setCustomers(d.items || [])); }, [page]);
 
   const submit = async (event) => {
@@ -156,12 +162,52 @@ function Records({ page }) {
   </section>;
 }
 
+function Splash({ onComplete }) {
+  return (
+    <main className="splash-screen relative grid min-h-[100dvh] overflow-hidden bg-[#183d2b] text-white">
+      <div className="splash-photo absolute inset-0" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#102819]/95 via-[#183d2b]/80 to-[#183d2b]/30" />
+      <div className="splash-glow absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#d6edb5]/20 blur-3xl" />
+      <div className="relative z-10 flex min-h-[100dvh] flex-col justify-between px-6 py-7 sm:px-10 sm:py-9 lg:px-16">
+        <div className="flex items-center gap-3 splash-reveal">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-[#d6edb5] text-2xl text-[#183d2b] shadow-lg">🌱</div>
+          <div>
+            <p className="font-bold tracking-wide">Divine Mercy Farms</p>
+            <p className="text-[10px] font-semibold tracking-[0.22em] text-[#d6edb5]">FARM MANAGEMENT</p>
+          </div>
+        </div>
+
+        <div className="max-w-xl pb-6">
+          <p className="splash-reveal-delayed mb-4 text-xs font-bold uppercase tracking-[0.25em] text-[#d6edb5]">Good stewardship. Better growth.</p>
+          <h1 className="splash-title text-4xl font-bold leading-tight sm:text-6xl lg:text-7xl">
+            Your farm,<br />in clear view.
+          </h1>
+          <p className="splash-reveal-delayed mt-5 max-w-md text-sm leading-7 text-white/75 sm:text-base">
+            One calm workspace for your poultry, records, sales and everyday farm decisions.
+          </p>
+          <button onClick={onComplete} className="splash-button mt-8 inline-flex min-h-12 items-center gap-3 rounded-xl bg-[#d6edb5] px-5 py-3 font-semibold text-[#183d2b] shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-white">
+            Enter farm workspace <span className="text-lg">→</span>
+          </button>
+        </div>
+
+        <div className="splash-reveal-delayed flex items-center gap-3 text-xs text-white/60">
+          <span className="h-px w-8 bg-[#d6edb5]" />
+          Poultry · Livestock · Records
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function FarmApp() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [page, setPage] = useState("Dashboard");
   const [mobileMenu, setMobileMenu] = useState(false);
-  useEffect(() => { const token = localStorage.getItem("dmf_token"); if (token) request("/auth/me").then((data) => setUser(data.user)).catch(() => localStorage.removeItem("dmf_token")).finally(() => setChecking(false)); else setChecking(false); }, []);
+  const [showSplash, setShowSplash] = useState(() => sessionStorage.getItem("dmf_splash_seen") !== "true");
+  const finishSplash = () => { sessionStorage.setItem("dmf_splash_seen", "true"); setShowSplash(false); };
+  useEffect(() => { const token = localStorage.getItem("dmf_token"); if (token) request("/auth/me").then((data) => setUser(data.user)).catch(() => localStorage.removeItem("dmf_token")).finally(() => setChecking(false)); else queueMicrotask(() => setChecking(false)); }, []);
+  if (showSplash) return <Splash onComplete={finishSplash} />;
   if (checking) return <main className="grid min-h-screen place-items-center bg-[#f7f8f2]"><p className="font-semibold text-[#28583b]">Loading Divine Mercy Farms…</p></main>;
   if (!user) return <Login onLogin={setUser} />;
   const logout = () => { localStorage.removeItem("dmf_token"); setUser(null); };
