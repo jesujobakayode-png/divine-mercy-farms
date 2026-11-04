@@ -13,7 +13,26 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    const allowedOrigins = [
+      "https://divine-mercy-farms.vercel.app",
+      "http://localhost:5173",
+      ...(process.env.FRONTEND_URLS || "")
+        .split(",")
+        .map((url) => url.trim())
+        .filter(Boolean),
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 
 app.get("/api/health", (_, res) =>

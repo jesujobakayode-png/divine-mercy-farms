@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "https://divine-mercy-farms-api.onrender.com/api");
 const pages = ["Dashboard", "Flocks", "Egg Production", "Sales", "Customers", "Expenses"];
 
 const money = (value) => `₦${Number(value || 0).toLocaleString()}`;
