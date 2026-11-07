@@ -19,6 +19,7 @@ const paymentSchema = new mongoose.Schema(
       ref: "Sale",
       default: null,
     },
+    purpose: { type: String, trim: true, default: "Farm payment" },
     amount: { type: Number, required: true, min: 0.01 },
     method: { type: String, enum: ["cash", "transfer", "pos", "other"], default: "cash" },
     date: { type: Date, required: true },

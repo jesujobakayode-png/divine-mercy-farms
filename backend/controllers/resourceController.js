@@ -8,11 +8,33 @@ const Expense = require("../models/Expense");
 
 const own = (req) => ({ businessId: req.user.businessId });
 
-const replyError = (res, error) =>
-  res.status(error.name === "ValidationError" ? 400 : 500).json({
+const replyError = (res, error) => {
+  let message = "Server error.";
+
+  if (error.name === "ValidationError") {
+    const firstError = Object.values(error.errors || {})[0];
+    const field = firstError?.path || "field";
+    const readableField = field
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (letter) => letter.toUpperCase())
+      .toLowerCase();
+
+    if (firstError?.kind === "required") {
+      message = `${readableField.charAt(0).toUpperCase()}${readableField.slice(1)} is required.`;
+    } else if (firstError?.kind === "enum") {
+      message = `Please choose a valid ${readableField}.`;
+    } else if (firstError?.kind === "min") {
+      message = `${readableField.charAt(0).toUpperCase()}${readableField.slice(1)} is below the allowed value.`;
+    } else {
+      message = `Please check the ${readableField} field.`;
+    }
+  }
+
+  return res.status(error.name === "ValidationError" ? 400 : 500).json({
     success: false,
-    message: error.name === "ValidationError" ? error.message : "Server error.",
+    message,
   });
+};
 
 const dateFilter = (query) => {
   const filter = {};
@@ -122,6 +144,23 @@ const flockCheck = async (req, res) => {
   return true;
 };
 
+const normalizeSaleUnit = (req, res) => {
+  if (req.body.product !== "eggs") return true;
+
+  const unit = String(req.body.unit || "").trim().toLowerCase().replace(/\s+/g, " ");
+  const normalized = unit === "crate" ? "crates" : unit === "piece" ? "pieces" : unit;
+
+  if (!["crates", "pieces"].includes(normalized)) {
+    res.status(400).json({ success: false, message: "Egg sales unit must be crates or pieces." });
+    return false;
+  }
+
+  req.body.unit = normalized;
+  return true;
+};
+
+const saleCheck = async (req, res) => (await flockCheck(req, res)) && normalizeSaleUnit(req, res);
+
 exports.flocks = crud(Flock, {
   query: (q) => (q.status ? { status: q.status } : {}),
 });
@@ -146,8 +185,8 @@ exports.customers = crud(Customer, {
 
 exports.sales = crud(Sale, {
   populate: "customerId flockId",
-  beforeCreate: flockCheck,
-  beforeUpdate: flockCheck,
+  beforeCreate: saleCheck,
+  beforeUpdate: saleCheck,
   query: (q) => ({
     ...(q.customerId ? { customerId: q.customerId } : {}),
     ...(q.product ? { product: q.product } : {}),

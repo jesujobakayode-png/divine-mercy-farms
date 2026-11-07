@@ -70,12 +70,25 @@ button {
   textarea {
     min-height: 44px;
   }
+
+  .rounded-3xl { border-radius: 1.25rem; }
+  .rounded-2xl { border-radius: 1rem; }
+  table th, table td { white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .splash-photo,
+  .splash-glow,
+  .splash-reveal,
+  .splash-reveal-delayed,
+  .splash-title,
+  .splash-button {
+    animation: none !important;
   }
 }
 
@@ -107,6 +120,20 @@ button {
   to { transform: translate3d(-18px, 24px, 0); }
 }
 
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter,
+.page-panel {
+  animation: page-enter 420ms ease-out both;
+}
+
+.page-panel:nth-of-type(2) { animation-delay: 80ms; }
+.page-panel:nth-of-type(3) { animation-delay: 140ms; }
+.page-panel:nth-of-type(4) { animation-delay: 200ms; }
+
 @media (max-width: 640px) {
   .splash-photo { background-position: 62% center; }
   .splash-screen::after {
@@ -114,16 +141,5 @@ button {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(16,40,25,.35), rgba(16,40,25,.92) 72%, #102819);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .splash-photo,
-  .splash-glow,
-  .splash-reveal,
-  .splash-reveal-delayed,
-  .splash-title,
-  .splash-button {
-    animation: none !important;
   }
 }
